@@ -56,7 +56,7 @@ public class SkierServicesImpl implements ISkierServices {
     @Override
     public Skier addSkierAndAssignToCourse(Skier skier, Long numCourse) {
         Skier savedSkier = skierRepository.save(skier);
-        Course course = courseRepository.getById(numCourse);
+        Course course = courseRepository.findById(numCourse).orElse(null);
         Set<Registration> registrations = savedSkier.getRegistrations();
         for (Registration r : registrations) {
             r.setSkier(savedSkier);
