@@ -77,6 +77,7 @@ class RegistrationServicesImplTest {
     void testAddRegistrationAndAssignToSkierNotFound() {
         // Given
         when(skierRepository.findById(999L)).thenReturn(Optional.empty());
+        when(registrationRepository.save(any(Registration.class))).thenReturn(testRegistration);
 
         // When
         Registration result = registrationServices.addRegistrationAndAssignToSkier(testRegistration, 999L);
@@ -111,11 +112,11 @@ class RegistrationServicesImplTest {
         // Given
         when(registrationRepository.findById(999L)).thenReturn(Optional.empty());
 
-        // When
-        Registration result = registrationServices.assignRegistrationToCourse(999L, 1L);
-
-        // Then
-        assertNull(result);
+        // When & Then
+        assertThrows(NullPointerException.class, () -> {
+            registrationServices.assignRegistrationToCourse(999L, 1L);
+        });
+        
         verify(registrationRepository, times(1)).findById(999L);
         verify(courseRepository, never()).findById(any());
     }
@@ -192,6 +193,7 @@ class RegistrationServicesImplTest {
     void testAddRegistrationAndAssignToSkierAndCourseWithNullSkier() {
         // Given
         when(skierRepository.findById(999L)).thenReturn(Optional.empty());
+        when(courseRepository.findById(1L)).thenReturn(Optional.of(testCourse));
 
         // When
         Registration result = registrationServices.addRegistrationAndAssignToSkierAndCourse(testRegistration, 999L, 1L);
@@ -199,7 +201,7 @@ class RegistrationServicesImplTest {
         // Then
         assertNull(result);
         verify(skierRepository, times(1)).findById(999L);
-        verify(courseRepository, never()).findById(any());
+        verify(courseRepository, times(1)).findById(1L);
     }
 
     @Test

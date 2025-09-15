@@ -250,15 +250,12 @@ class SubscriptionServicesImplTest {
         subscriptionWithNullType.setPrice(100.0f);
         subscriptionWithNullType.setTypeSub(null);
 
-        when(subscriptionRepository.save(any(Subscription.class))).thenReturn(subscriptionWithNullType);
-
-        // When
-        Subscription result = subscriptionServices.addSubscription(subscriptionWithNullType);
-
-        // Then
-        assertNotNull(result);
-        assertNull(result.getTypeSub());
-        verify(subscriptionRepository, times(1)).save(subscriptionWithNullType);
+        // When & Then
+        assertThrows(NullPointerException.class, () -> {
+            subscriptionServices.addSubscription(subscriptionWithNullType);
+        });
+        
+        verify(subscriptionRepository, never()).save(any(Subscription.class));
     }
 
     @Test

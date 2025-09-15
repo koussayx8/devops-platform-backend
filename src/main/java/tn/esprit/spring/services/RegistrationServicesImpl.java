@@ -38,10 +38,10 @@ public class RegistrationServicesImpl implements  IRegistrationServices{
             throw new NullPointerException("Registration ID and Course ID cannot be null");
         }
         Registration registration = registrationRepository.findById(numRegistration).orElse(null);
-        Course course = courseRepository.findById(numCourse).orElse(null);
         if (registration == null) {
             throw new NullPointerException("Registration not found");
         }
+        Course course = courseRepository.findById(numCourse).orElse(null);
         registration.setCourse(course);
         return registrationRepository.save(registration);
     }
