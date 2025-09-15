@@ -20,16 +20,25 @@ public class CourseServicesImpl implements  ICourseServices{
 
     @Override
     public Course addCourse(Course course) {
+        if (course == null) {
+            throw new IllegalArgumentException("Course cannot be null");
+        }
         return courseRepository.save(course);
     }
 
     @Override
     public Course updateCourse(Course course) {
+        if (course == null) {
+            throw new IllegalArgumentException("Course cannot be null");
+        }
         return courseRepository.save(course);
     }
 
     @Override
     public Course retrieveCourse(Long numCourse) {
+        if (numCourse == null) {
+            throw new IllegalArgumentException("Course ID cannot be null");
+        }
         return courseRepository.findById(numCourse).orElse(null);
     }
 

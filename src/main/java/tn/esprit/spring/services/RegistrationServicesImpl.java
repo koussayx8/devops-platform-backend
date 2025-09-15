@@ -24,6 +24,9 @@ public class RegistrationServicesImpl implements  IRegistrationServices{
 
     @Override
     public Registration addRegistrationAndAssignToSkier(Registration registration, Long numSkier) {
+        if (registration == null || numSkier == null) {
+            throw new NullPointerException("Registration and skier ID cannot be null");
+        }
         Skier skier = skierRepository.findById(numSkier).orElse(null);
         registration.setSkier(skier);
         return registrationRepository.save(registration);
@@ -31,8 +34,14 @@ public class RegistrationServicesImpl implements  IRegistrationServices{
 
     @Override
     public Registration assignRegistrationToCourse(Long numRegistration, Long numCourse) {
+        if (numRegistration == null || numCourse == null) {
+            throw new NullPointerException("Registration ID and Course ID cannot be null");
+        }
         Registration registration = registrationRepository.findById(numRegistration).orElse(null);
         Course course = courseRepository.findById(numCourse).orElse(null);
+        if (registration == null) {
+            throw new NullPointerException("Registration not found");
+        }
         registration.setCourse(course);
         return registrationRepository.save(registration);
     }
@@ -40,6 +49,9 @@ public class RegistrationServicesImpl implements  IRegistrationServices{
     @Transactional
     @Override
     public Registration addRegistrationAndAssignToSkierAndCourse(Registration registration, Long numSkieur, Long numCours) {
+        if (registration == null || numSkieur == null || numCours == null) {
+            throw new NullPointerException("Registration, skier ID, and course ID cannot be null");
+        }
         Skier skier = skierRepository.findById(numSkieur).orElse(null);
         Course course = courseRepository.findById(numCours).orElse(null);
 
@@ -100,6 +112,9 @@ public class RegistrationServicesImpl implements  IRegistrationServices{
 
     @Override
     public List<Integer> numWeeksCourseOfInstructorBySupport(Long numInstructor, Support support) {
+        if (numInstructor == null || support == null) {
+            throw new NullPointerException("Instructor ID and support cannot be null");
+        }
         return registrationRepository.numWeeksCourseOfInstructorBySupport(numInstructor, support);
     }
 

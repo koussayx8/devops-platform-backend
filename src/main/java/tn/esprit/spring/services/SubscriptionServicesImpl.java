@@ -25,6 +25,12 @@ public class SubscriptionServicesImpl implements ISubscriptionServices{
 
     @Override
     public Subscription addSubscription(Subscription subscription) {
+        if (subscription == null) {
+            throw new IllegalArgumentException("Subscription cannot be null");
+        }
+        if (subscription.getTypeSub() == null) {
+            throw new NullPointerException("Subscription type cannot be null");
+        }
         switch (subscription.getTypeSub()) {
             case ANNUAL:
                 subscription.setEndDate(subscription.getStartDate().plusYears(1));
@@ -41,21 +47,33 @@ public class SubscriptionServicesImpl implements ISubscriptionServices{
 
     @Override
     public Subscription updateSubscription(Subscription subscription) {
+        if (subscription == null) {
+            throw new NullPointerException("Subscription cannot be null");
+        }
         return subscriptionRepository.save(subscription);
     }
 
     @Override
     public Subscription retrieveSubscriptionById(Long numSubscription) {
+        if (numSubscription == null) {
+            throw new NullPointerException("Subscription ID cannot be null");
+        }
         return subscriptionRepository.findById(numSubscription).orElse(null);
     }
 
     @Override
     public Set<Subscription> getSubscriptionByType(TypeSubscription type) {
+        if (type == null) {
+            throw new NullPointerException("Subscription type cannot be null");
+        }
         return subscriptionRepository.findByTypeSubOrderByStartDateAsc(type);
     }
 
     @Override
     public List<Subscription> retrieveSubscriptionsByDates(LocalDate startDate, LocalDate endDate) {
+        if (startDate == null || endDate == null) {
+            throw new NullPointerException("Start date and end date cannot be null");
+        }
         return subscriptionRepository.getSubscriptionsByStartDateBetween(startDate, endDate);
     }
 
