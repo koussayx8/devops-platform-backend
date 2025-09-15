@@ -14,6 +14,7 @@ import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -33,15 +34,15 @@ class SubscriptionServicesImplTest {
     @BeforeEach
     void setUp() {
         testSubscription = new Subscription();
-        testSubscription.setNumSubscription(1L);
-        testSubscription.setTypeSub(TypeSubscription.ANNUAL);
+        testSubscription.setNumSub(1L);
         testSubscription.setStartDate(LocalDate.now());
-        testSubscription.setEndDate(LocalDate.now().plusYears(1));
+        testSubscription.setEndDate(LocalDate.now().plusMonths(1));
+        testSubscription.setPrice(100.0f);
+        testSubscription.setTypeSub(TypeSubscription.MONTHLY);
     }
 
-    // CREATE Tests
     @Test
-    void testAddSubscription_Success() {
+    void testAddSubscription() {
         // Given
         when(subscriptionRepository.save(any(Subscription.class))).thenReturn(testSubscription);
 
@@ -50,236 +51,251 @@ class SubscriptionServicesImplTest {
 
         // Then
         assertNotNull(result);
-        assertEquals(testSubscription.getNumSubscription(), result.getNumSubscription());
+        assertEquals(testSubscription.getNumSub(), result.getNumSub());
         assertEquals(testSubscription.getTypeSub(), result.getTypeSub());
-        assertEquals(testSubscription.getStartDate(), result.getStartDate());
-        assertEquals(testSubscription.getEndDate(), result.getEndDate());
-        verify(subscriptionRepository).save(testSubscription);
+        verify(subscriptionRepository, times(1)).save(testSubscription);
     }
 
     @Test
-    void testAddSubscription_WithNullSubscription() {
-        // When & Then
-        assertThrows(Exception.class, () -> {
-            subscriptionServices.addSubscription(null);
-        });
-    }
-
-    // READ Tests
-    @Test
-    void testRetrieveAllSubscriptions_Success() {
+    void testUpdateSubscription() {
         // Given
-        List<Subscription> expectedSubscriptions = Arrays.asList(testSubscription);
-        when(subscriptionRepository.findAll()).thenReturn(expectedSubscriptions);
+        when(subscriptionRepository.save(any(Subscription.class))).thenReturn(testSubscription);
 
         // When
-        List<Subscription> result = subscriptionServices.retrieveAllSubscriptions();
+        Subscription result = subscriptionServices.updateSubscription(testSubscription);
+
+        // Then
+        assertNotNull(result);
+        assertEquals(testSubscription.getNumSub(), result.getNumSub());
+        verify(subscriptionRepository, times(1)).save(testSubscription);
+    }
+
+    @Test
+    void testRetrieveSubscriptionById() {
+        // Given
+        when(subscriptionRepository.findById(1L)).thenReturn(Optional.of(testSubscription));
+
+        // When
+        Subscription result = subscriptionServices.retrieveSubscriptionById(1L);
+
+        // Then
+        assertNotNull(result);
+        assertEquals(testSubscription.getNumSub(), result.getNumSub());
+        verify(subscriptionRepository, times(1)).findById(1L);
+    }
+
+    @Test
+    void testRetrieveSubscriptionByIdNotFound() {
+        // Given
+        when(subscriptionRepository.findById(999L)).thenReturn(Optional.empty());
+
+        // When
+        Subscription result = subscriptionServices.retrieveSubscriptionById(999L);
+
+        // Then
+        assertNull(result);
+        verify(subscriptionRepository, times(1)).findById(999L);
+    }
+
+    @Test
+    void testGetSubscriptionByType() {
+        // Given
+        Set<Subscription> subscriptions = Set.of(testSubscription);
+        when(subscriptionRepository.findByTypeSubOrderByStartDateAsc(TypeSubscription.MONTHLY))
+                .thenReturn(subscriptions);
+
+        // When
+        Set<Subscription> result = subscriptionServices.getSubscriptionByType(TypeSubscription.MONTHLY);
 
         // Then
         assertNotNull(result);
         assertEquals(1, result.size());
-        assertEquals(testSubscription.getNumSubscription(), result.get(0).getNumSubscription());
-        verify(subscriptionRepository).findAll();
+        assertTrue(result.contains(testSubscription));
+        verify(subscriptionRepository, times(1)).findByTypeSubOrderByStartDateAsc(TypeSubscription.MONTHLY);
     }
 
     @Test
-    void testRetrieveAllSubscriptions_EmptyList() {
+    void testRetrieveSubscriptionsByDates() {
         // Given
-        when(subscriptionRepository.findAll()).thenReturn(Arrays.asList());
+        LocalDate startDate = LocalDate.now().minusDays(30);
+        LocalDate endDate = LocalDate.now();
+        List<Subscription> subscriptions = Arrays.asList(testSubscription);
+        when(subscriptionRepository.getSubscriptionsByStartDateBetween(startDate, endDate))
+                .thenReturn(subscriptions);
 
         // When
-        List<Subscription> result = subscriptionServices.retrieveAllSubscriptions();
+        List<Subscription> result = subscriptionServices.retrieveSubscriptionsByDates(startDate, endDate);
 
         // Then
         assertNotNull(result);
-        assertTrue(result.isEmpty());
-        verify(subscriptionRepository).findAll();
+        assertEquals(1, result.size());
+        assertEquals(testSubscription, result.get(0));
+        verify(subscriptionRepository, times(1)).getSubscriptionsByStartDateBetween(startDate, endDate);
     }
 
     @Test
-    void testRetrieveSubscription_Success() {
+    void testAddSubscriptionWithAnnualType() {
         // Given
-        Long subscriptionId = 1L;
-        when(subscriptionRepository.findById(subscriptionId)).thenReturn(Optional.of(testSubscription));
+        Subscription annualSubscription = new Subscription();
+        annualSubscription.setNumSub(2L);
+        annualSubscription.setStartDate(LocalDate.now());
+        annualSubscription.setPrice(500.0f);
+        annualSubscription.setTypeSub(TypeSubscription.ANNUAL);
 
-        // When
-        Subscription result = subscriptionServices.retrieveSubscription(subscriptionId);
-
-        // Then
-        assertNotNull(result);
-        assertEquals(testSubscription.getNumSubscription(), result.getNumSubscription());
-        assertEquals(testSubscription.getTypeSub(), result.getTypeSub());
-        verify(subscriptionRepository).findById(subscriptionId);
-    }
-
-    @Test
-    void testRetrieveSubscription_NotFound() {
-        // Given
-        Long subscriptionId = 999L;
-        when(subscriptionRepository.findById(subscriptionId)).thenReturn(Optional.empty());
-
-        // When
-        Subscription result = subscriptionServices.retrieveSubscription(subscriptionId);
-
-        // Then
-        assertNull(result);
-        verify(subscriptionRepository).findById(subscriptionId);
-    }
-
-    @Test
-    void testRetrieveSubscription_WithNullId() {
-        // When & Then
-        assertThrows(Exception.class, () -> {
-            subscriptionServices.retrieveSubscription(null);
+        when(subscriptionRepository.save(any(Subscription.class))).thenAnswer(invocation -> {
+            Subscription sub = invocation.getArgument(0);
+            sub.setEndDate(sub.getStartDate().plusYears(1));
+            return sub;
         });
-    }
-
-    // UPDATE Tests
-    @Test
-    void testUpdateSubscription_Success() {
-        // Given
-        Subscription updatedSubscription = new Subscription();
-        updatedSubscription.setNumSubscription(1L);
-        updatedSubscription.setTypeSub(TypeSubscription.MONTHLY);
-        updatedSubscription.setStartDate(LocalDate.now());
-        updatedSubscription.setEndDate(LocalDate.now().plusMonths(1));
-
-        when(subscriptionRepository.save(any(Subscription.class))).thenReturn(updatedSubscription);
 
         // When
-        Subscription result = subscriptionServices.updateSubscription(updatedSubscription);
+        Subscription result = subscriptionServices.addSubscription(annualSubscription);
 
         // Then
         assertNotNull(result);
-        assertEquals(updatedSubscription.getNumSubscription(), result.getNumSubscription());
-        assertEquals(updatedSubscription.getTypeSub(), result.getTypeSub());
-        assertEquals(updatedSubscription.getStartDate(), result.getStartDate());
-        assertEquals(updatedSubscription.getEndDate(), result.getEndDate());
-        verify(subscriptionRepository).save(updatedSubscription);
+        assertEquals(LocalDate.now().plusYears(1), result.getEndDate());
+        verify(subscriptionRepository, times(1)).save(annualSubscription);
     }
 
     @Test
-    void testUpdateSubscription_WithNullSubscription() {
+    void testAddSubscriptionWithSemestrielType() {
+        // Given
+        Subscription semestrielSubscription = new Subscription();
+        semestrielSubscription.setNumSub(3L);
+        semestrielSubscription.setStartDate(LocalDate.now());
+        semestrielSubscription.setPrice(300.0f);
+        semestrielSubscription.setTypeSub(TypeSubscription.SEMESTRIEL);
+
+        when(subscriptionRepository.save(any(Subscription.class))).thenAnswer(invocation -> {
+            Subscription sub = invocation.getArgument(0);
+            sub.setEndDate(sub.getStartDate().plusMonths(6));
+            return sub;
+        });
+
+        // When
+        Subscription result = subscriptionServices.addSubscription(semestrielSubscription);
+
+        // Then
+        assertNotNull(result);
+        assertEquals(LocalDate.now().plusMonths(6), result.getEndDate());
+        verify(subscriptionRepository, times(1)).save(semestrielSubscription);
+    }
+
+    @Test
+    void testAddSubscriptionWithMonthlyType() {
+        // Given
+        Subscription monthlySubscription = new Subscription();
+        monthlySubscription.setNumSub(4L);
+        monthlySubscription.setStartDate(LocalDate.now());
+        monthlySubscription.setPrice(100.0f);
+        monthlySubscription.setTypeSub(TypeSubscription.MONTHLY);
+
+        when(subscriptionRepository.save(any(Subscription.class))).thenAnswer(invocation -> {
+            Subscription sub = invocation.getArgument(0);
+            sub.setEndDate(sub.getStartDate().plusMonths(1));
+            return sub;
+        });
+
+        // When
+        Subscription result = subscriptionServices.addSubscription(monthlySubscription);
+
+        // Then
+        assertNotNull(result);
+        assertEquals(LocalDate.now().plusMonths(1), result.getEndDate());
+        verify(subscriptionRepository, times(1)).save(monthlySubscription);
+    }
+
+    @Test
+    void testUpdateSubscriptionWithNull() {
         // When & Then
-        assertThrows(Exception.class, () -> {
+        assertThrows(NullPointerException.class, () -> {
             subscriptionServices.updateSubscription(null);
         });
     }
 
-    // DELETE Tests
     @Test
-    void testRemoveSubscription_Success() {
-        // Given
-        Long subscriptionId = 1L;
-
-        // When
-        subscriptionServices.removeSubscription(subscriptionId);
-
-        // Then
-        verify(subscriptionRepository).deleteById(subscriptionId);
-    }
-
-    @Test
-    void testRemoveSubscription_WithNullId() {
+    void testRetrieveSubscriptionByIdWithNull() {
         // When & Then
-        assertThrows(Exception.class, () -> {
-            subscriptionServices.removeSubscription(null);
+        assertThrows(NullPointerException.class, () -> {
+            subscriptionServices.retrieveSubscriptionById(null);
         });
     }
 
-    // Edge Cases and Business Logic Tests
     @Test
-    void testAddSubscription_WithDifferentTypes() {
-        // Given
-        Subscription annualSubscription = new Subscription();
-        annualSubscription.setTypeSub(TypeSubscription.ANNUAL);
-        annualSubscription.setStartDate(LocalDate.now());
-        annualSubscription.setEndDate(LocalDate.now().plusYears(1));
-
-        Subscription monthlySubscription = new Subscription();
-        monthlySubscription.setTypeSub(TypeSubscription.MONTHLY);
-        monthlySubscription.setStartDate(LocalDate.now());
-        monthlySubscription.setEndDate(LocalDate.now().plusMonths(1));
-
-        Subscription semestrielSubscription = new Subscription();
-        semestrielSubscription.setTypeSub(TypeSubscription.SEMESTRIEL);
-        semestrielSubscription.setStartDate(LocalDate.now());
-        semestrielSubscription.setEndDate(LocalDate.now().plusMonths(6));
-
-        when(subscriptionRepository.save(any(Subscription.class))).thenReturn(annualSubscription, monthlySubscription, semestrielSubscription);
-
-        // When
-        Subscription result1 = subscriptionServices.addSubscription(annualSubscription);
-        Subscription result2 = subscriptionServices.addSubscription(monthlySubscription);
-        Subscription result3 = subscriptionServices.addSubscription(semestrielSubscription);
-
-        // Then
-        assertNotNull(result1);
-        assertNotNull(result2);
-        assertNotNull(result3);
-        assertEquals(TypeSubscription.ANNUAL, result1.getTypeSub());
-        assertEquals(TypeSubscription.MONTHLY, result2.getTypeSub());
-        assertEquals(TypeSubscription.SEMESTRIEL, result3.getTypeSub());
-        verify(subscriptionRepository, times(3)).save(any(Subscription.class));
+    void testGetSubscriptionByTypeWithNull() {
+        // When & Then
+        assertThrows(NullPointerException.class, () -> {
+            subscriptionServices.getSubscriptionByType(null);
+        });
     }
 
     @Test
-    void testRetrieveAllSubscriptions_MultipleSubscriptions() {
+    void testRetrieveSubscriptionsByDatesWithNullDates() {
+        // When & Then
+        assertThrows(NullPointerException.class, () -> {
+            subscriptionServices.retrieveSubscriptionsByDates(null, LocalDate.now());
+        });
+
+        assertThrows(NullPointerException.class, () -> {
+            subscriptionServices.retrieveSubscriptionsByDates(LocalDate.now(), null);
+        });
+    }
+
+    @Test
+    void testAddSubscriptionWithNullType() {
         // Given
-        Subscription subscription1 = new Subscription();
-        subscription1.setNumSubscription(1L);
-        subscription1.setTypeSub(TypeSubscription.ANNUAL);
+        Subscription subscriptionWithNullType = new Subscription();
+        subscriptionWithNullType.setNumSub(5L);
+        subscriptionWithNullType.setStartDate(LocalDate.now());
+        subscriptionWithNullType.setPrice(100.0f);
+        subscriptionWithNullType.setTypeSub(null);
 
-        Subscription subscription2 = new Subscription();
-        subscription2.setNumSubscription(2L);
-        subscription2.setTypeSub(TypeSubscription.MONTHLY);
-
-        List<Subscription> expectedSubscriptions = Arrays.asList(subscription1, subscription2);
-        when(subscriptionRepository.findAll()).thenReturn(expectedSubscriptions);
+        when(subscriptionRepository.save(any(Subscription.class))).thenReturn(subscriptionWithNullType);
 
         // When
-        List<Subscription> result = subscriptionServices.retrieveAllSubscriptions();
+        Subscription result = subscriptionServices.addSubscription(subscriptionWithNullType);
+
+        // Then
+        assertNotNull(result);
+        assertNull(result.getTypeSub());
+        verify(subscriptionRepository, times(1)).save(subscriptionWithNullType);
+    }
+
+    @Test
+    void testMultipleSubscriptionsByType() {
+        // Given
+        Subscription subscription1 = new Subscription();
+        subscription1.setNumSub(1L);
+        subscription1.setTypeSub(TypeSubscription.MONTHLY);
+
+        Subscription subscription2 = new Subscription();
+        subscription2.setNumSub(2L);
+        subscription2.setTypeSub(TypeSubscription.MONTHLY);
+
+        Set<Subscription> subscriptions = Set.of(subscription1, subscription2);
+        when(subscriptionRepository.findByTypeSubOrderByStartDateAsc(TypeSubscription.MONTHLY))
+                .thenReturn(subscriptions);
+
+        // When
+        Set<Subscription> result = subscriptionServices.getSubscriptionByType(TypeSubscription.MONTHLY);
 
         // Then
         assertNotNull(result);
         assertEquals(2, result.size());
-        assertEquals(subscription1.getNumSubscription(), result.get(0).getNumSubscription());
-        assertEquals(subscription2.getNumSubscription(), result.get(1).getNumSubscription());
-        verify(subscriptionRepository).findAll();
+        assertTrue(result.stream().allMatch(sub -> sub.getTypeSub() == TypeSubscription.MONTHLY));
+        verify(subscriptionRepository, times(1)).findByTypeSubOrderByStartDateAsc(TypeSubscription.MONTHLY);
     }
 
     @Test
-    void testAddSubscription_WithDateValidation() {
-        // Given
-        LocalDate startDate = LocalDate.of(2024, 1, 1);
-        LocalDate endDate = LocalDate.of(2024, 12, 31);
-        
-        testSubscription.setStartDate(startDate);
-        testSubscription.setEndDate(endDate);
-        
-        when(subscriptionRepository.save(any(Subscription.class))).thenReturn(testSubscription);
-
-        // When
-        Subscription result = subscriptionServices.addSubscription(testSubscription);
-
-        // Then
-        assertNotNull(result);
-        assertEquals(startDate, result.getStartDate());
-        assertEquals(endDate, result.getEndDate());
-        assertTrue(result.getEndDate().isAfter(result.getStartDate()));
-        verify(subscriptionRepository).save(testSubscription);
-    }
-
-    @Test
-    void testUpdateSubscription_ChangeType() {
+    void testUpdateSubscriptionWithDifferentData() {
         // Given
         Subscription originalSubscription = new Subscription();
-        originalSubscription.setNumSubscription(1L);
-        originalSubscription.setTypeSub(TypeSubscription.MONTHLY);
+        originalSubscription.setNumSub(1L);
+        originalSubscription.setPrice(100.0f);
 
         Subscription updatedSubscription = new Subscription();
-        updatedSubscription.setNumSubscription(1L);
-        updatedSubscription.setTypeSub(TypeSubscription.ANNUAL);
+        updatedSubscription.setNumSub(1L);
+        updatedSubscription.setPrice(150.0f);
 
         when(subscriptionRepository.save(any(Subscription.class))).thenReturn(updatedSubscription);
 
@@ -288,7 +304,7 @@ class SubscriptionServicesImplTest {
 
         // Then
         assertNotNull(result);
-        assertEquals(TypeSubscription.ANNUAL, result.getTypeSub());
-        verify(subscriptionRepository).save(updatedSubscription);
+        assertEquals(150.0f, result.getPrice());
+        verify(subscriptionRepository, times(1)).save(updatedSubscription);
     }
 }

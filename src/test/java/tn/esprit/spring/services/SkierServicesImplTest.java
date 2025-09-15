@@ -47,7 +47,7 @@ class SkierServicesImplTest {
     void setUp() {
         // Create test subscription
         testSubscription = new Subscription();
-        testSubscription.setNumSubscription(1L);
+        testSubscription.setNumSub(1L);
         testSubscription.setTypeSub(TypeSubscription.ANNUAL);
         testSubscription.setStartDate(LocalDate.now());
         testSubscription.setEndDate(LocalDate.now().plusYears(1));
@@ -154,7 +154,7 @@ class SkierServicesImplTest {
         Long skierId = 1L;
         Long subscriptionId = 2L;
         Subscription newSubscription = new Subscription();
-        newSubscription.setNumSubscription(subscriptionId);
+        newSubscription.setNumSub(subscriptionId);
         newSubscription.setTypeSub(TypeSubscription.MONTHLY);
 
         when(skierRepository.findById(skierId)).thenReturn(Optional.of(testSkier));

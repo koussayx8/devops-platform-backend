@@ -39,7 +39,7 @@ class SkierRestControllerTest {
     void setUp() {
         // Create test subscription
         testSubscription = new Subscription();
-        testSubscription.setNumSubscription(1L);
+        testSubscription.setNumSub(1L);
         testSubscription.setTypeSub(TypeSubscription.ANNUAL);
         testSubscription.setStartDate(LocalDate.now());
         testSubscription.setEndDate(LocalDate.now().plusYears(1));

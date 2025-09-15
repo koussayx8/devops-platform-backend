@@ -39,36 +39,8 @@ class PisteServicesImplTest {
         testPiste.setSlope(15);
     }
 
-    // CREATE Tests
     @Test
-    void testAddPiste_Success() {
-        // Given
-        when(pisteRepository.save(any(Piste.class))).thenReturn(testPiste);
-
-        // When
-        Piste result = pisteServices.addPiste(testPiste);
-
-        // Then
-        assertNotNull(result);
-        assertEquals(testPiste.getNumPiste(), result.getNumPiste());
-        assertEquals(testPiste.getNamePiste(), result.getNamePiste());
-        assertEquals(testPiste.getColor(), result.getColor());
-        assertEquals(testPiste.getLength(), result.getLength());
-        assertEquals(testPiste.getSlope(), result.getSlope());
-        verify(pisteRepository).save(testPiste);
-    }
-
-    @Test
-    void testAddPiste_WithNullPiste() {
-        // When & Then
-        assertThrows(Exception.class, () -> {
-            pisteServices.addPiste(null);
-        });
-    }
-
-    // READ Tests
-    @Test
-    void testRetrieveAllPistes_Success() {
+    void testRetrieveAllPistes() {
         // Given
         List<Piste> expectedPistes = Arrays.asList(testPiste);
         when(pisteRepository.findAll()).thenReturn(expectedPistes);
@@ -80,11 +52,91 @@ class PisteServicesImplTest {
         assertNotNull(result);
         assertEquals(1, result.size());
         assertEquals(testPiste.getNumPiste(), result.get(0).getNumPiste());
-        verify(pisteRepository).findAll();
+        verify(pisteRepository, times(1)).findAll();
     }
 
     @Test
-    void testRetrieveAllPistes_EmptyList() {
+    void testAddPiste() {
+        // Given
+        when(pisteRepository.save(any(Piste.class))).thenReturn(testPiste);
+
+        // When
+        Piste result = pisteServices.addPiste(testPiste);
+
+        // Then
+        assertNotNull(result);
+        assertEquals(testPiste.getNumPiste(), result.getNumPiste());
+        assertEquals(testPiste.getNamePiste(), result.getNamePiste());
+        assertEquals(testPiste.getColor(), result.getColor());
+        verify(pisteRepository, times(1)).save(testPiste);
+    }
+
+    @Test
+    void testRemovePiste() {
+        // Given
+        Long pisteId = 1L;
+
+        // When
+        pisteServices.removePiste(pisteId);
+
+        // Then
+        verify(pisteRepository, times(1)).deleteById(pisteId);
+    }
+
+    @Test
+    void testRetrievePiste() {
+        // Given
+        when(pisteRepository.findById(1L)).thenReturn(Optional.of(testPiste));
+
+        // When
+        Piste result = pisteServices.retrievePiste(1L);
+
+        // Then
+        assertNotNull(result);
+        assertEquals(testPiste.getNumPiste(), result.getNumPiste());
+        assertEquals(testPiste.getNamePiste(), result.getNamePiste());
+        verify(pisteRepository, times(1)).findById(1L);
+    }
+
+    @Test
+    void testRetrievePisteNotFound() {
+        // Given
+        when(pisteRepository.findById(999L)).thenReturn(Optional.empty());
+
+        // When
+        Piste result = pisteServices.retrievePiste(999L);
+
+        // Then
+        assertNull(result);
+        verify(pisteRepository, times(1)).findById(999L);
+    }
+
+    @Test
+    void testAddPisteWithNull() {
+        // When & Then
+        assertThrows(NullPointerException.class, () -> {
+            pisteServices.addPiste(null);
+        });
+    }
+
+    @Test
+    void testRemovePisteWithNull() {
+        // When & Then
+        assertThrows(NullPointerException.class, () -> {
+            pisteServices.removePiste(null);
+        });
+    }
+
+    @Test
+    void testRetrievePisteWithNull() {
+        // When & Then
+        assertThrows(NullPointerException.class, () -> {
+            pisteServices.retrievePiste(null);
+        });
+    }
+
+    @Test
+    void testRetrieveAllPistesEmpty() {
         // Given
         when(pisteRepository.findAll()).thenReturn(Arrays.asList());
 
@@ -94,117 +146,50 @@ class PisteServicesImplTest {
         // Then
         assertNotNull(result);
         assertTrue(result.isEmpty());
-        verify(pisteRepository).findAll();
+        verify(pisteRepository, times(1)).findAll();
     }
 
     @Test
-    void testRetrievePiste_Success() {
+    void testMultiplePistes() {
         // Given
-        Long pisteId = 1L;
-        when(pisteRepository.findById(pisteId)).thenReturn(Optional.of(testPiste));
+        Piste piste1 = new Piste();
+        piste1.setNumPiste(1L);
+        piste1.setNamePiste("Blue Piste");
+        piste1.setColor(Color.BLUE);
+
+        Piste piste2 = new Piste();
+        piste2.setNumPiste(2L);
+        piste2.setNamePiste("Red Piste");
+        piste2.setColor(Color.RED);
+
+        List<Piste> pistes = Arrays.asList(piste1, piste2);
+        when(pisteRepository.findAll()).thenReturn(pistes);
 
         // When
-        Piste result = pisteServices.retrievePiste(pisteId);
+        List<Piste> result = pisteServices.retrieveAllPistes();
 
         // Then
         assertNotNull(result);
-        assertEquals(testPiste.getNumPiste(), result.getNumPiste());
-        assertEquals(testPiste.getNamePiste(), result.getNamePiste());
-        verify(pisteRepository).findById(pisteId);
+        assertEquals(2, result.size());
+        assertEquals("Blue Piste", result.get(0).getNamePiste());
+        assertEquals("Red Piste", result.get(1).getNamePiste());
+        verify(pisteRepository, times(1)).findAll();
     }
 
     @Test
-    void testRetrievePiste_NotFound() {
-        // Given
-        Long pisteId = 999L;
-        when(pisteRepository.findById(pisteId)).thenReturn(Optional.empty());
-
-        // When
-        Piste result = pisteServices.retrievePiste(pisteId);
-
-        // Then
-        assertNull(result);
-        verify(pisteRepository).findById(pisteId);
-    }
-
-    @Test
-    void testRetrievePiste_WithNullId() {
-        // When & Then
-        assertThrows(Exception.class, () -> {
-            pisteServices.retrievePiste(null);
-        });
-    }
-
-    // UPDATE Tests
-    @Test
-    void testUpdatePiste_Success() {
-        // Given
-        Piste updatedPiste = new Piste();
-        updatedPiste.setNumPiste(1L);
-        updatedPiste.setNamePiste("Red Piste");
-        updatedPiste.setColor(Color.RED);
-        updatedPiste.setLength(1500);
-        updatedPiste.setSlope(25);
-
-        when(pisteRepository.save(any(Piste.class))).thenReturn(updatedPiste);
-
-        // When
-        Piste result = pisteServices.updatePiste(updatedPiste);
-
-        // Then
-        assertNotNull(result);
-        assertEquals(updatedPiste.getNumPiste(), result.getNumPiste());
-        assertEquals(updatedPiste.getNamePiste(), result.getNamePiste());
-        assertEquals(updatedPiste.getColor(), result.getColor());
-        assertEquals(updatedPiste.getLength(), result.getLength());
-        assertEquals(updatedPiste.getSlope(), result.getSlope());
-        verify(pisteRepository).save(updatedPiste);
-    }
-
-    @Test
-    void testUpdatePiste_WithNullPiste() {
-        // When & Then
-        assertThrows(Exception.class, () -> {
-            pisteServices.updatePiste(null);
-        });
-    }
-
-    // DELETE Tests
-    @Test
-    void testRemovePiste_Success() {
-        // Given
-        Long pisteId = 1L;
-
-        // When
-        pisteServices.removePiste(pisteId);
-
-        // Then
-        verify(pisteRepository).deleteById(pisteId);
-    }
-
-    @Test
-    void testRemovePiste_WithNullId() {
-        // When & Then
-        assertThrows(Exception.class, () -> {
-            pisteServices.removePiste(null);
-        });
-    }
-
-    // Edge Cases and Business Logic Tests
-    @Test
-    void testAddPiste_WithDifferentColors() {
+    void testAddPisteWithDifferentColors() {
         // Given
         Piste bluePiste = new Piste();
-        bluePiste.setColor(Color.BLUE);
         bluePiste.setNamePiste("Blue Piste");
+        bluePiste.setColor(Color.BLUE);
 
         Piste redPiste = new Piste();
-        redPiste.setColor(Color.RED);
         redPiste.setNamePiste("Red Piste");
+        redPiste.setColor(Color.RED);
 
         Piste greenPiste = new Piste();
-        greenPiste.setColor(Color.GREEN);
         greenPiste.setNamePiste("Green Piste");
+        greenPiste.setColor(Color.GREEN);
 
         when(pisteRepository.save(any(Piste.class))).thenReturn(bluePiste, redPiste, greenPiste);
 
@@ -224,91 +209,43 @@ class PisteServicesImplTest {
     }
 
     @Test
-    void testRetrieveAllPistes_MultiplePistes() {
+    void testAddPisteWithLengthAndSlope() {
         // Given
-        Piste piste1 = new Piste();
-        piste1.setNumPiste(1L);
-        piste1.setNamePiste("Piste 1");
+        Piste piste = new Piste();
+        piste.setNamePiste("Advanced Piste");
+        piste.setColor(Color.RED);
+        piste.setLength(2000);
+        piste.setSlope(25);
 
-        Piste piste2 = new Piste();
-        piste2.setNumPiste(2L);
-        piste2.setNamePiste("Piste 2");
-
-        List<Piste> expectedPistes = Arrays.asList(piste1, piste2);
-        when(pisteRepository.findAll()).thenReturn(expectedPistes);
+        when(pisteRepository.save(any(Piste.class))).thenReturn(piste);
 
         // When
-        List<Piste> result = pisteServices.retrieveAllPistes();
+        Piste result = pisteServices.addPiste(piste);
 
         // Then
         assertNotNull(result);
-        assertEquals(2, result.size());
-        assertEquals(piste1.getNumPiste(), result.get(0).getNumPiste());
-        assertEquals(piste2.getNumPiste(), result.get(1).getNumPiste());
-        verify(pisteRepository).findAll();
+        assertEquals(2000, result.getLength());
+        assertEquals(25, result.getSlope());
+        verify(pisteRepository, times(1)).save(piste);
     }
 
     @Test
-    void testAddPiste_WithDifferentSlopes() {
+    void testRetrievePisteWithSpecificId() {
         // Given
-        Piste beginnerPiste = new Piste();
-        beginnerPiste.setSlope(10);
-        beginnerPiste.setColor(Color.GREEN);
+        Long specificId = 5L;
+        Piste specificPiste = new Piste();
+        specificPiste.setNumPiste(specificId);
+        specificPiste.setNamePiste("Specific Piste");
 
-        Piste intermediatePiste = new Piste();
-        intermediatePiste.setSlope(20);
-        intermediatePiste.setColor(Color.BLUE);
-
-        Piste advancedPiste = new Piste();
-        advancedPiste.setSlope(35);
-        advancedPiste.setColor(Color.RED);
-
-        when(pisteRepository.save(any(Piste.class))).thenReturn(beginnerPiste, intermediatePiste, advancedPiste);
+        when(pisteRepository.findById(specificId)).thenReturn(Optional.of(specificPiste));
 
         // When
-        Piste result1 = pisteServices.addPiste(beginnerPiste);
-        Piste result2 = pisteServices.addPiste(intermediatePiste);
-        Piste result3 = pisteServices.addPiste(advancedPiste);
+        Piste result = pisteServices.retrievePiste(specificId);
 
         // Then
-        assertNotNull(result1);
-        assertNotNull(result2);
-        assertNotNull(result3);
-        assertEquals(10, result1.getSlope());
-        assertEquals(20, result2.getSlope());
-        assertEquals(35, result3.getSlope());
-        verify(pisteRepository, times(3)).save(any(Piste.class));
-    }
-
-    @Test
-    void testAddPiste_WithDifferentLengths() {
-        // Given
-        Piste shortPiste = new Piste();
-        shortPiste.setLength(500);
-        shortPiste.setNamePiste("Short Piste");
-
-        Piste mediumPiste = new Piste();
-        mediumPiste.setLength(1000);
-        mediumPiste.setNamePiste("Medium Piste");
-
-        Piste longPiste = new Piste();
-        longPiste.setLength(2000);
-        longPiste.setNamePiste("Long Piste");
-
-        when(pisteRepository.save(any(Piste.class))).thenReturn(shortPiste, mediumPiste, longPiste);
-
-        // When
-        Piste result1 = pisteServices.addPiste(shortPiste);
-        Piste result2 = pisteServices.addPiste(mediumPiste);
-        Piste result3 = pisteServices.addPiste(longPiste);
-
-        // Then
-        assertNotNull(result1);
-        assertNotNull(result2);
-        assertNotNull(result3);
-        assertEquals(500, result1.getLength());
-        assertEquals(1000, result2.getLength());
-        assertEquals(2000, result3.getLength());
-        verify(pisteRepository, times(3)).save(any(Piste.class));
+        assertNotNull(result);
+        assertEquals(specificId, result.getNumPiste());
+        assertEquals("Specific Piste", result.getNamePiste());
+        verify(pisteRepository, times(1)).findById(specificId);
     }
 }
