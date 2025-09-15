@@ -231,14 +231,15 @@ class SubscriptionServicesImplTest {
 
     @Test
     void testRetrieveSubscriptionsByDatesWithNullDates() {
-        // When & Then
-        assertThrows(NullPointerException.class, () -> {
-            subscriptionServices.retrieveSubscriptionsByDates(null, LocalDate.now());
-        });
+        // Test null start date
+        assertThrows(NullPointerException.class, () -> 
+            subscriptionServices.retrieveSubscriptionsByDates(null, LocalDate.now())
+        );
 
-        assertThrows(NullPointerException.class, () -> {
-            subscriptionServices.retrieveSubscriptionsByDates(LocalDate.now(), null);
-        });
+        // Test null end date  
+        assertThrows(NullPointerException.class, () -> 
+            subscriptionServices.retrieveSubscriptionsByDates(LocalDate.now(), null)
+        );
     }
 
     @Test

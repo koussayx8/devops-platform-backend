@@ -190,7 +190,7 @@ class SkierServicesImplTest {
         // Given
         Long courseId = 1L;
         when(skierRepository.save(any(Skier.class))).thenReturn(testSkier);
-        when(courseRepository.getById(courseId)).thenReturn(testCourse);
+        when(courseRepository.findById(courseId)).thenReturn(Optional.of(testCourse));
         when(registrationRepository.save(any(Registration.class))).thenReturn(testRegistration);
 
         // When
@@ -199,7 +199,7 @@ class SkierServicesImplTest {
         // Then
         assertNotNull(result);
         verify(skierRepository).save(testSkier);
-        verify(courseRepository).getById(courseId);
+        verify(courseRepository).findById(courseId);
         verify(registrationRepository).save(testRegistration);
     }
 
