@@ -31,6 +31,13 @@ public class CourseServicesImpl implements  ICourseServices{
         if (course == null) {
             throw new IllegalArgumentException("Course cannot be null");
         }
+        if (course.getNumCourse() == null) {
+            throw new IllegalArgumentException("Course ID cannot be null for update");
+        }
+        // Verify course exists before updating
+        if (!courseRepository.existsById(course.getNumCourse())) {
+            throw new IllegalArgumentException("Course with ID " + course.getNumCourse() + " does not exist");
+        }
         return courseRepository.save(course);
     }
 

@@ -78,6 +78,7 @@ class InstructorServicesImplTest {
     @Test
     void testUpdateInstructor() {
         // Given
+        when(instructorRepository.existsById(1L)).thenReturn(true);
         when(instructorRepository.save(any(Instructor.class))).thenReturn(testInstructor);
 
         // When
@@ -86,6 +87,7 @@ class InstructorServicesImplTest {
         // Then
         assertNotNull(result);
         assertEquals(testInstructor.getNumInstructor(), result.getNumInstructor());
+        verify(instructorRepository, times(1)).existsById(1L);
         verify(instructorRepository, times(1)).save(testInstructor);
     }
 
@@ -170,6 +172,40 @@ class InstructorServicesImplTest {
     }
 
     @Test
+    void testUpdateInstructor_InstructorNotExists() {
+        // Given
+        Instructor nonExistentInstructor = new Instructor();
+        nonExistentInstructor.setNumInstructor(999L);
+        nonExistentInstructor.setFirstName("Ghost");
+
+        when(instructorRepository.existsById(999L)).thenReturn(false);
+
+        // When & Then
+        assertThrows(NullPointerException.class, () -> {
+            instructorServices.updateInstructor(nonExistentInstructor);
+        });
+
+        verify(instructorRepository).existsById(999L);
+        verify(instructorRepository, never()).save(any(Instructor.class));
+    }
+
+    @Test
+    void testUpdateInstructor_WithNullId() {
+        // Given
+        Instructor instructorWithNullId = new Instructor();
+        instructorWithNullId.setNumInstructor(null);
+        instructorWithNullId.setFirstName("NoId");
+
+        // When & Then
+        assertThrows(NullPointerException.class, () -> {
+            instructorServices.updateInstructor(instructorWithNullId);
+        });
+
+        verify(instructorRepository, never()).existsById(any());
+        verify(instructorRepository, never()).save(any(Instructor.class));
+    }
+
+    @Test
     void testRetrieveInstructorWithNull() {
         // When & Then
         assertThrows(NullPointerException.class, () -> {
@@ -247,6 +283,7 @@ class InstructorServicesImplTest {
         updatedInstructor.setFirstName("Johnny");
         updatedInstructor.setLastName("Doe");
 
+        when(instructorRepository.existsById(1L)).thenReturn(true);
         when(instructorRepository.save(any(Instructor.class))).thenReturn(updatedInstructor);
 
         // When

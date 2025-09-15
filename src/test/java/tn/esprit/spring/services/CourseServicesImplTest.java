@@ -145,6 +145,7 @@ class CourseServicesImplTest {
         updatedCourse.setPrice(75.0f);
         updatedCourse.setTimeSlot(3);
 
+        when(courseRepository.existsById(1L)).thenReturn(true);
         when(courseRepository.save(any(Course.class))).thenReturn(updatedCourse);
 
         // When
@@ -165,6 +166,40 @@ class CourseServicesImplTest {
         assertThrows(Exception.class, () -> {
             courseServices.updateCourse(null);
         });
+    }
+
+    @Test
+    void testUpdateCourse_CourseNotExists() {
+        // Given
+        Course nonExistentCourse = new Course();
+        nonExistentCourse.setNumCourse(999L);
+        nonExistentCourse.setLevel(1);
+
+        when(courseRepository.existsById(999L)).thenReturn(false);
+
+        // When & Then
+        assertThrows(IllegalArgumentException.class, () -> {
+            courseServices.updateCourse(nonExistentCourse);
+        });
+
+        verify(courseRepository).existsById(999L);
+        verify(courseRepository, never()).save(any(Course.class));
+    }
+
+    @Test
+    void testUpdateCourse_WithNullId() {
+        // Given
+        Course courseWithNullId = new Course();
+        courseWithNullId.setNumCourse(null);
+        courseWithNullId.setLevel(1);
+
+        // When & Then
+        assertThrows(IllegalArgumentException.class, () -> {
+            courseServices.updateCourse(courseWithNullId);
+        });
+
+        verify(courseRepository, never()).existsById(any());
+        verify(courseRepository, never()).save(any(Course.class));
     }
 
     // Edge Cases and Business Logic Tests

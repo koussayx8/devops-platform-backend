@@ -36,6 +36,13 @@ public class InstructorServicesImpl implements IInstructorServices{
         if (instructor == null) {
             throw new NullPointerException("Instructor cannot be null");
         }
+        if (instructor.getNumInstructor() == null) {
+            throw new NullPointerException("Instructor ID cannot be null for update");
+        }
+        // Verify instructor exists before updating
+        if (!instructorRepository.existsById(instructor.getNumInstructor())) {
+            throw new NullPointerException("Instructor with ID " + instructor.getNumInstructor() + " does not exist");
+        }
         return instructorRepository.save(instructor);
     }
 
