@@ -20,6 +20,9 @@ public class InstructorServicesImpl implements IInstructorServices{
 
     @Override
     public Instructor addInstructor(Instructor instructor) {
+        if (instructor == null) {
+            throw new NullPointerException("Instructor cannot be null");
+        }
         return instructorRepository.save(instructor);
     }
 
@@ -30,16 +33,25 @@ public class InstructorServicesImpl implements IInstructorServices{
 
     @Override
     public Instructor updateInstructor(Instructor instructor) {
+        if (instructor == null) {
+            throw new NullPointerException("Instructor cannot be null");
+        }
         return instructorRepository.save(instructor);
     }
 
     @Override
     public Instructor retrieveInstructor(Long numInstructor) {
+        if (numInstructor == null) {
+            throw new NullPointerException("Instructor ID cannot be null");
+        }
         return instructorRepository.findById(numInstructor).orElse(null);
     }
 
     @Override
     public Instructor addInstructorAndAssignToCourse(Instructor instructor, Long numCourse) {
+        if (instructor == null || numCourse == null) {
+            throw new NullPointerException("Instructor and course ID cannot be null");
+        }
         Course course = courseRepository.findById(numCourse).orElse(null);
         Set<Course> courseSet = new HashSet<>();
         courseSet.add(course);

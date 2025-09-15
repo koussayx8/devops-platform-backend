@@ -19,16 +19,25 @@ public class PisteServicesImpl implements  IPisteServices{
 
     @Override
     public Piste addPiste(Piste piste) {
+        if (piste == null) {
+            throw new NullPointerException("Piste cannot be null");
+        }
         return pisteRepository.save(piste);
     }
 
     @Override
     public void removePiste(Long numPiste) {
+        if (numPiste == null) {
+            throw new NullPointerException("Piste ID cannot be null");
+        }
         pisteRepository.deleteById(numPiste);
     }
 
     @Override
     public Piste retrievePiste(Long numPiste) {
+        if (numPiste == null) {
+            throw new NullPointerException("Piste ID cannot be null");
+        }
         return pisteRepository.findById(numPiste).orElse(null);
     }
 }
