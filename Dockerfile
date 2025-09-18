@@ -1,6 +1,6 @@
 # Multi-stage build for Spring Boot application
 # Stage 1: Build the application
-FROM maven:3.9.6-openjdk-17-slim AS build
+FROM maven:3.9.6-eclipse-temurin-17 AS build
 
 # Set working directory
 WORKDIR /app
@@ -18,7 +18,7 @@ COPY src ./src
 RUN mvn clean package -DskipTests
 
 # Stage 2: Create runtime image
-FROM openjdk:17-jre-slim AS runtime
+FROM eclipse-temurin:17-jre AS runtime
 
 # Create non-root user for security
 RUN groupadd -r spring && useradd -r -g spring spring
