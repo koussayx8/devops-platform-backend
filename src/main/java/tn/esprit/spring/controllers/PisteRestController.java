@@ -21,6 +21,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/piste")
 @RequiredArgsConstructor
+@CrossOrigin(origins = "*")
 public class PisteRestController {
 
     private final IPisteServices pisteServices;

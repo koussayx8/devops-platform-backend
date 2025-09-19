@@ -21,6 +21,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/instructor")
 @RequiredArgsConstructor
+@CrossOrigin(origins = "*")
 public class InstructorRestController {
 
     private final IInstructorServices instructorServices;
